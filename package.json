@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "name": "room_expense_distributor",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "backend": "npm run backend --prefix backend",
+    "frontend": "npm run frontend --prefix frontend",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
