@@ -2,14 +2,7 @@ import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
 export const register = async (req, res) => {
-    if (!req.body) {
-        return res.status(400).json({
-            success: false,
-            message: "body is required."
-        });
-    }
     const { name, email, phone, password, confirmPassword } = req.body;
-
 
     if (!name || !email || !password || !confirmPassword || !phone) {
         return res.status(400).json({ success: false, message: "All fields are required!" });
@@ -23,54 +16,65 @@ export const register = async (req, res) => {
         const doesExists = await User.findOne({ $or: [{ phone }, { email }] });
 
         if (doesExists) {
-            return res.status(400).json({ success: false, message: "User already registered.with this email or phone" })
+            return res.status(400).json({
+                success: false,
+                message: "User already registered",
+            });
         }
+
         const newUser = await User.create({ name, email, phone, password });
 
-        const token = jwt.sign({ userId: newUser._id}, process.env.JWT_SECRET, { expiresIn: "1d" });
+        const token = jwt.sign(
+            { userId: newUser._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+        );
 
-        const newUserPayload = {
-            name: newUser.name,
-            email: newUser.email,
-            phone: newUser.phone,
-            plan: newUser.plan,
-            roomsOwned: newUser.roomsOwned,
-            createdAt: newUser.createdAt
-        }
-        return res.status(201).json({ success: true, message: "User registered successfully", newUserPayload, token });
+        return res.status(201).json({
+            success: true,
+            message: "User registered successfully",
+            user: newUser,
+            token,
+        });
     } catch (e) {
-        console.error(`error in registering`, e);
-        return res.status(500).json({ success: false, message: "Internal Server Error." });
+        return res.status(500).json({ success: false });
     }
-
-}
+};
 
 export const login = async (req, res) => {
     const { phone, password } = req.body;
 
     if (!phone || !password) {
-        return res.status(400).json({ success: false, message: "All fields are required." });
+        return res.status(400).json({ success: false });
     }
 
     try {
-        const existsUser = await User.findOne({ phone });
-        if (!existsUser) {
+        const user = await User.findOne({ phone });
+
+        if (!user) {
             return res.status(400).json({ success: false, message: "User not found" });
         }
-        const matchPasword = existsUser.password.trim() === password.trim()
 
-        if (!matchPasword) {
-            return res.status(400).json({ sucess: false, message: "Wrong password! Please try again" });
+        if (user.password !== password) {
+            return res.status(400).json({ success: false, message: "Wrong password" });
         }
 
-        const token = jwt.sign({ userId: existsUser._id, role: existsUser.role }, process.env.JWT_SECRET, { expiresIn: "1d" });
+        const token = jwt.sign(
+            { userId: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+        );
 
-        return res.status(200).json({ success: true, message: "Login successfully", token });
+        return res.status(200).json({
+            success: true,
+            message: "Login successful",
+            user,
+            token,
+        });
     } catch (e) {
-        console.error(`login error: `, e);
-        return res.status(500).json({ success: false, message: "Internal Server Error" });
+        return res.status(500).json({ success: false });
     }
-}
+};
 
 // export const googleLogin = async (req, res) => {
 //     const { gooleLoginToken } = req.body;

@@ -1,29 +1,20 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css'
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { Toaster } from 'react-hot-toast';
 
-import AuthState from './context/auth/AuthState'
-import UserState from './context/user/UserState'
-import RoomState from './context/room/RoomState'
-import DashboardLayout from './components/pages/dashboard/DashboardLayout'
-import Login from './components/common/auth/Login'
-import Register from './components/common/auth/Register';
-import Home from './components/pages/home/Home'
-import ProtectedRoute from './components/common/ProtectedRoute';
-import Dashboard from './components/pages/dashboard/pages/dashboard/Dashboard';
-import Room from './components/pages/dashboard/pages/rooms/Room';
-import Account from './components/pages/dashboard/pages/accounts/Account';
-import RoomDetailPage from './components/pages/dashboard/pages/rooms/roomDetail/RoomDetailPage';
+import PublicLayout from './components/layout/PublicLayout';
+import PublicRoute from './routes/PublicRoute';
+import ProtectedRoute from './routes/ProtectedRoute';
+import PrivateLayout from './components/layout/PrivateLayout';
+import NotFound from './components/common/NotFound';
 
+import { privateRoutes, publicRoutes } from './routes/routeConfig';
 
 
 function App() {
-
   return (
-    <AppProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
+    <>
+      <AppRoutes />
 
       <Toaster
         position="top-right"
@@ -55,49 +46,46 @@ function App() {
           },
         }}
       />
-    </AppProvider>
-
+    </>
   )
 }
 
-function AppProvider({ children }) {
-  return (
-    <RoomState>
-      <UserState>
-        <AuthState>
-          {children}
-        </AuthState>
-      </UserState>
-    </RoomState>
 
-  )
-}
 
 function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+    <Router>
+      <Routes>
 
-      <Route path='/dashboard'
-        element={
-          <ProtectedRoute>
-            <DashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Dashboard />} />
-        <Route path='room' element={<Room />} />
-        <Route path='room/:roomId/room-detail-page' element={<RoomDetailPage />} />
-        <Route path='account' element={<Account />} />
-      </Route>
+        {/* Public routes */}
+        <Route element={<PublicLayout />}>
+          {publicRoutes.map((route) => (
+            <Route
+              key={route.path}
+              path={route.path}
+              element={<PublicRoute>{route.element}</PublicRoute>}
+            />
+          ))}
+        </Route>
 
+        {/* Private routes  */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <PrivateLayout />
+            </ProtectedRoute>
+          }
+        >
+          {privateRoutes.map((route) => (
+            <Route key={route.path} path={route.path} element={route.element} />
+          ))}
+        </Route>
 
-      <Route path='/*' element={<Home />} />
-    </Routes>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
   )
 }
-
 
 
 export default App  

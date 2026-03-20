@@ -132,7 +132,10 @@ export const addRoomMember = async (req, res) => {
         const existingMember = room.roomMembers.find(
             m =>
                 m.invitedEmail === email &&
-                ["pending", "accepted"].includes(m.status)
+                (
+                    (m.status === "pending" && new Date() < m.expiresAt) ||
+                    m.status === "accepted"
+                )
         );
 
         if (existingMember) {
@@ -243,7 +246,7 @@ export const joinRoom = async (req, res) => {
         }
 
         if (member.expiresAt && member.expiresAt < new Date()) {
-            member.status = "rejected";
+            member.status = "expired";
             member.inviteToken = undefined;
 
             await room.save();
@@ -350,7 +353,6 @@ export const removeRoomMember = async (req, res) => {
         });
     }
 }
-
 // incomplete contorller hai ahbi ye 
 export const getAllRooms = async (req, res) => {
     const userId = req.userId;
